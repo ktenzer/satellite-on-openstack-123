@@ -1,0 +1,54 @@
+- name: Create hammer dir
+  file:
+    path: /root/.hammer
+    state: directory
+    mode: 0755
+
+- name: Copy Hammer config file from template
+  template:
+    src: templates/cli_config.j2
+    dest: /root/.hammer/cli_config.yml
+    owner: root
+    group: root
+    mode: 0644
+
+- name: Start and enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+- name: Add Satellite 6 Rule
+  firewalld:
+    service: RH-Satellite-6
+    permanent: true
+    state: enabled
+
+- name: Add HTTP Rule
+  firewalld:
+    service: http
+    permanent: true
+    state: enabled
+
+- name: Add HTTPS Rule
+  firewalld:
+    service: https
+    permanent: true
+    state: enabled
+    
+- name: Add goferd Rule
+  firewalld:
+    port: 5674/tcp
+    permanent: true
+    state: enabled
+  
+- name: Add VNC Rule
+  firewalld:
+    port: 5901-5930/tcp
+    permanent: true
+    state: enabled
+
+- name: Add OMAPI Rule
+  firewalld:
+    port: 7911/tcp
+    permanent: true
+    state: enabled

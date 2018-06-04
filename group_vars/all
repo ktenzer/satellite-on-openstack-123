@@ -1,0 +1,17 @@
+packages:
+  - screen
+  - yum-utils
+  - vim
+  - bash-completion
+  - sos
+  - firewalld
+  - satellite
+  - puppet-foreman_scap_client
+  - foreman-discovery-image
+repos:
+  - rhel-7-server-rpms
+  - rhel-server-rhscl-7-rpms
+  - rhel-7-server-extras-rpms
+  - rhel-7-server-optional-rpms
+  - rhel-7-server-satellite-{{ satellite_version }}-rpms
+  - rhel-7-server-satellite-{{ satellite_version }}-{{ puppet_version }}-rpms

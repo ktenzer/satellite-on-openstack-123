@@ -1,0 +1,17 @@
+---
+### satellite Setting ###
+org: <organization>
+location: <location>
+manifest_file:
+ssh_user: cloud-user
+admin_user: <Satellite admin user>
+admin_passwd: <Satellite admin password>
+
+### OpenShift Settings ###
+satellite_version: 6.3
+puppet_version: puppet4
+
+### Red Hat Subscription ###
+rhn_username: <user>
+rhn_password: <password>
+rhn_pool: <pool>

@@ -1,0 +1,20 @@
+- name: Check if Satellite installed
+  command: hammer organization list
+  ignore_errors: yes
+  register: hammer_output
+
+- debug:
+    msg: "{{ hammer_output }}"
+
+- name: Run Satellite 6 Installer
+  command: satellite-installer --scenario satellite --foreman-initial-organization {{ org }} --foreman-initial-location {{ location }} --foreman-admin-username {{admin_user }} --foreman-admin-password {{ admin_passwd }} --foreman-proxy-dns-managed=false --foreman-proxy-dhcp-managed=false
+  register: satellite_install_output
+  when: hammer_output.rc != 0  
+
+- debug:
+    msg: "{{ satellite_install_output }}"
+
+- name: Restart foreman proxy
+  service:
+    name: foreman-proxy
+    state: restarted

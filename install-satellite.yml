@@ -1,0 +1,23 @@
+---
+- name: Perform base configuration of systems
+  hosts: all
+  become: true
+  gather_facts: true
+  remote_user: "{{ ssh_user }}"
+
+  tasks:
+  - import_role:
+      name: base
+  - import_role:
+      name: sat6-prep
+
+- name: Install Satellite 6
+  hosts: server
+  become: true
+  gather_facts: true
+  remote_user: "{{ ssh_user }}"
+
+  tasks:
+  - import_role:
+      name: sat6-install
+
