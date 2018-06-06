@@ -9,12 +9,21 @@
     path: "{{ manifest_file }}"
   register: stat_result
 
+- assert:
+    that: stat_result.stat.exists == True
+    msg: "Manifest file not found."
+
+- name: Check if manifest already exists
+  shell: hammer subscription list --organization {{ org }} |grep "[0-9]"
+  register: manifest_output
+
 - name: Upload Satellite Manifest
   command: hammer subscription upload --organization {{ org }} --file {{ manifest_file }}
-  when: stat_result.stat.exists == True
+  when: manifest_output.rc != 0
 
--name: Refresh manifest
+- name: Refresh manifest
   command: hammer subscription refresh-manifest --organization {{ org }}
+  when: manifest_output.rc != 0
 
 - name: Load OpenScap
   command: foreman-rake foreman_openscap:bulk_upload:default
@@ -28,93 +37,136 @@
     recurse: yes
     mode: 0775
 
+- name: Check if 7server repository is enabled
+  shell:  hammer repository list --organization {{ org }} |grep "7Server"
+  register: rhel7_server_repo_output
+  ignore_errors: True
+
 - name: Enable RHEL 7 Server Repository
-  command: hammer repository-set enable --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --releasever='7Server' --name 'Red Hat Enterprise Linux 7 Server (RPMs)'
+  shell: hammer repository-set enable --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --releasever='7Server' --name 'Red Hat Enterprise Linux 7 Server (RPMs)'
+  when: rhel7_server_repo_output.rc != 0
 
 - name: Syncronize RHEL 7 Server Repository
-  command: time hammer repository synchronize --organization "$ORG" --product 'Red Hat Enterprise Linux Server'  --name  'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server' 2>/dev/null
+  shell: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --name 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
   register: rhel7_server_output
+  when: rhel7_server_repo_output.rc != 0
 
 - debug:
     msg: "{{ rhel7_server_output }}"
 
+- name: check if satellite tools repository is enabled
+  shell:  hammer repository list --organization {{ org }} |grep "Red Hat Satellite Tools 6.3"
+  register: satellite_tools_repo_output
+  ignore_errors: True
+
 - name: Enable Satellite 6 Tools Repository
-  command: hammer repository-set enable --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --name 'Red Hat Satellite Tools 6.3 (for RHEL 7 Server) (RPMs)'
+  shell: hammer repository-set enable --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --name 'Red Hat Satellite Tools 6.3 (for RHEL 7 Server) (RPMs)'
+  when: satellite_tools_repo_output.rc != 0
 
 - name: Synchronize Satellite 6 Tools Repository
-  command: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Enterprise Linux Server'  --name  'Red Hat Satellite Tools 6.3 for RHEL 7 Server RPMs x86_64'
+  shell: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --name 'Red Hat Satellite Tools 6.3 for RHEL 7 Server RPMs x86_64'
   register: satellite6_tools_output
+  when: satellite_tools_repo_output.rc != 0
 
-- debug
+- debug:
     msg: "{{ satellite6_tools_output }}"
 
+- name: check if satellite puppet tools repository is enabled
+  shell:  hammer repository list --organization {{ org }} |grep "Red Hat Satellite Tools 6.3 - Puppet 4"
+  register: satellite_puppet_tools_repo_output
+  ignore_errors: True
+
+- name: Enable Satellite 6 Puppet Tools Repository
+  shell: hammer repository-set enable --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --basearch='x86_64' --name 'Red Hat Satellite Tools 6.3 - Puppet 4 (for RHEL 7 Server) (RPMs)'
+  when: satellite_puppet_tools_repo_output.rc != 0
+
+- name: Synchronize Satellite 6 Puppet Tools Repository
+  shell: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Enterprise Linux Server' --name 'Red Hat Satellite Tools 6.3 - Puppet 4 for RHEL 7 Server RPMs x86_64'
+  register: satellite6_puppet_tools_output
+  when: satellite_puppet_tools_repo_output.rc != 0
+
+- debug:
+    msg: "{{ satellite6_puppet_tools_output }}"
+
+- name: Check if software collections repositoriy is enabled
+  shell: hammer repository list --organization {{ org }} |grep "Red Hat Software Collections"
+  register: software_collections_repo_output
+  ignore_errors: True
+
 - name: Enable Software Collections Repository
-  command: hammer repository-set enable --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server' --basearch='x86_64' --releasever='7Server' --name 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server'
+  shell: hammer repository-set enable --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server' --basearch='x86_64' --releasever='7Server' --name 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server'
+  when: software_collections_repo_output.rc != 0
 
 - name: Synchronize Satellite 6 Software Collections Repository
-  command: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server'  --name  'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server' 2>/dev/null
+  shell: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server'  --name  'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
   register: software_collections_output
+  when: software_collections_repo_output.rc != 0
 
 - debug:
     msg: "{{ software_collections_output }}"
 
+- name: Check for puppet forge product
+  shell: hammer product list --organization {{ org }} | grep "Puppet Forge"
+  register: puppet_output
+  ignore_errors: True
+
 - name: Create Product for Puppet Forge
-  command: hammer product create --name='Puppet Forge' --organization {{ org }}
+  shell: hammer product create --name='Puppet Forge' --organization {{ org }}
+  when: puppet_output.rc != 0
 
 - name: Create repository for puppet forge
-  command: hammer repository create  --organization {{ org }} --name='Modules' --product='Puppet Forge' --content-type='puppet' --publish-via-http=true --url=http://forge.puppetlabs.com/
+  shell: hammer repository create  --organization {{ org }} --name='Modules' --product='Puppet Forge' --content-type='puppet' --publish-via-http=true --url=http://forge.puppetlabs.com/
+  when: puppet_output.rc != 0
 
 - name: Synchronize puppet forge repository
-  command: time hammer repository synchronize --organization {{ org }} --product 'Puppet Forge'  --name  'Modules' 2>/dev/null
+  shell: time hammer repository synchronize --organization {{ org }} --product 'Puppet Forge'  --name  'Modules'
   register: puppet_forge_output
+  when: puppet_output.rc != 0
 
 - debug:
     msg: "{{ puppet_forge_output }}"
 
+- name: Check if sync plan exists
+  shell: hammer sync-plan list --organization {{ org }} |grep "daily sync"
+  register: sync_plan_output
+  ignore_errors: True
+
 - name: Create a daily sync plan
-  command: hammer sync-plan create --name "daily sync" --enabled=true --interval daily --organization $ORG --sync-date "2018-05-01 01:00:00"
+  shell: hammer sync-plan create --name "daily sync" --enabled=true --interval daily --organization {{ org }} --sync-date "2018-05-01 01:00:00"
+  when: sync_plan_output.rc != 0
+
+- name: Check if development lifecycle environment exists
+  shell: hammer lifecycle-environment list --organization {{ org }} |grep "Development"
+  register: development_output
+  ignore_errors: True
 
 - name: Create Development Lifecycle Environment
-  command: hammer lifecycle-environment create --organization {{ org }} --description 'Development' --name 'Development' --label development --prior Library
+  shell: hammer lifecycle-environment create --organization {{ org }} --description 'Development' --name 'Development' --label development --prior Library
+  when: development_output.rc != 0
+
+- name: Check if test lifecycle environment exists
+  shell: hammer lifecycle-environment list --organization {{ org }} |grep "Test"
+  register: test_output
+  ignore_errors: True
 
 - name: Create test Lifecycle Environment
-  command: hammer lifecycle-environment create --organization {{ org }} --description 'Test' --name 'Test' --label test --prior 'Development'
+  shell: hammer lifecycle-environment create --organization {{ org }} --description 'Test' --name 'Test' --label test --prior 'Development'
+  when: test_output.rc != 0
+
+- name: Check if production lifecycle environment exists
+  shell: hammer lifecycle-environment list --organization {{ org }} |grep "Production"
+  register: production_output
+  ignore_errors: True
 
 - name: Create Production Lifecycle Environment
-  command: hammer lifecycle-environment create --organization {{ org }} --description 'Production' --name 'Production' --label production --prior 'Test'
+  shell: hammer lifecycle-environment create --organization {{ org }} --description 'Production' --name 'Production' --label production --prior 'Test'
+  when: production_output.rc != 0
 
-- name: Create Staging Lifecycle Environment
-  command: hammer lifecycle-environment create --organization {{ org }} --description 'Latest packages without staging' --name 'UnStaged' --label unstaged --prior Library
+- name: Check if un-staged lifecycle environment exists
+  shell: hammer lifecycle-environment list --organization {{ org }} |grep "UnStaged"
+  register: unstaged_output
+  ignore_errors: True
 
-- name: Create RHEL Base Content View
-  command: hammer content-view create --organization {{ org }} --name 'RHEL7_Base' --label rhel7_base --description 'Core Build for RHEL 7'
-
-- name: Add RHEL7 Server to Base content view
-  command:  hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
-
-- name: Add Satellite tools to base content view
-  command: hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.3 for RHEL 7 Server RPMs x86_64'
-
-- name: Add puppet tools to base content view
-  command: hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.3 - Puppet 4 for RHEL 7 Server RPMs x86_64'
-
-- name: Add stdlib module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name stdlib
-
-- name: Add concat puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name concat
-
-- name: Add ntp puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name ntp
-
-- name: add ssh puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author saz --name ssh
-
-- name: Publish content view
-  command: time hammer content-view publish --organization {{ org }} --name RHEL7_Base --description 'Initial Publishing' 2>/dev/null
-
-- name: Promote content view to stage
-  command: time hammer content-view version promote --organization {{ org }} --content-view RHEL7_Base --to-lifecycle-environment UnStaged  2>/dev/null
-
-- name: Create activation key:
-  command: hammer activation-key create --organization="{{ org }}" --name="rhel7-base" --unlimited-hosts --lifecycle-environment='UnStaged' --content-view='RHEL7_Base'
+- name: Create Un-Staged Lifecycle Environment
+  shell: hammer lifecycle-environment create --organization {{ org }} --description 'Latest packages without staging' --name 'UnStaged' --label unstaged --prior Library
+  when: unstaged_output.rc != 0

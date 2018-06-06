@@ -8,8 +8,10 @@
   tasks:
   - import_role:
       name: base
+    tags: ['base']
   - import_role:
       name: sat6-prep
+    tags: ['prep']
 
 - name: Install Satellite 6
   hosts: server
@@ -20,4 +22,11 @@
   tasks:
   - import_role:
       name: sat6-install
+    tags: ['install']
+  - import_role:
+      name: sat6-configure
+    tags: ['configure']
+  - import_role:
+      name: sat6-post-configure
+    tags: ['post']
 

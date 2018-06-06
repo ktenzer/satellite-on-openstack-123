@@ -1,0 +1,57 @@
+- name: Check if Base content view exists
+  shell: hammer content-view list --organization {{ org }} |grep "RHEL7_Base"
+  register: base_cv_output
+  ignore_errors: True
+
+- name: Create RHEL Base Content View
+  command: hammer content-view create --organization {{ org }} --name 'RHEL7_Base' --label rhel7_base --description 'Core Build for RHEL 7'
+  when: base_cv_output.rc != 0
+
+- name: Add RHEL7 Server to Base content view
+  command:  hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Enterprise Linux 7 Server RPMs x86_64 7Server'
+  when: base_cv_output.rc != 0
+
+- name: Add Satellite tools to base content view
+  command: hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.3 for RHEL 7 Server RPMs x86_64'
+  when: base_cv_output.rc != 0
+
+- name: Add puppet tools to base content view
+  command: hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.3 - Puppet 4 for RHEL 7 Server RPMs x86_64'
+  when: base_cv_output.rc != 0
+
+- name: Add stdlib module to base content view
+  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name stdlib
+  when: base_cv_output.rc != 0
+
+- name: Add concat puppet module to base content view
+  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name concat
+  when: base_cv_output.rc != 0
+
+- name: Add ntp puppet module to base content view
+  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name ntp
+  when: base_cv_output.rc != 0
+
+- name: add ssh puppet module to base content view
+  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author saz --name ssh
+  when: base_cv_output.rc != 0
+
+- name: add insights puppet module to base content view
+  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author lphiri --name access_insights_client
+  when: base_cv_output.rc != 0
+
+- name: Publish content view
+  shell: time hammer content-view publish --organization {{ org }} --name RHEL7_Base --description 'Initial Publishing'
+  when: base_cv_output.rc != 0
+
+- name: Promote content view to stage
+  shell: time hammer content-view version promote --organization {{ org }} --content-view RHEL7_Base --to-lifecycle-environment UnStaged
+  when: base_cv_output.rc != 0
+
+- name: Check if activation key exists
+  shell: hammer activation-key list --organization="{{ org }}" |grep "rhel7-base"
+  register: activation_key_output
+  ignore_errors: True
+  
+- name: Create activation key
+  shell: hammer activation-key create --organization="{{ org }}" --name="rhel7-base" --unlimited-hosts --lifecycle-environment='UnStaged' --content-view='RHEL7_Base'
+  when: activation_key_output.rc != 0
