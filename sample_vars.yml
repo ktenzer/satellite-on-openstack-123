@@ -1,15 +1,44 @@
 ---
-### satellite Setting ###
-org: <organization>
-location: <location>
-manifest_file:
+### General Settings ###
 ssh_user: cloud-user
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
 
-### OpenShift Settings ###
+### OpenStack Settings ###
+stack_name: myinstance
+heat_template_path: /root/satellite-on-openstack-123/heat/instance.yaml
+openstack_version: 12
+openstack_user: admin
+openstack_passwd: <passwd>
+openstack_ip: <ip>
+
+### OpenStack Instance Settings ###
+hostname: rhel123
+domain_name: novalocal
+external_network: public
+internal_network: internal
+internal_subnet: internal-subnet
+security_group: base
+flavor: m2.tiny
+image: rhel75
+ssh_key_name: admin
+volume_size: 30
+ssh_key_name: admin
+
+
+### Satellite Settings ###
+satellite_server: sat6.novalocal
+satellite_ip: <ip>
 satellite_version: 6.3
+activation_key: rhel7-base
 puppet_version: puppet4
+puppet_environment: KT_RedHat_unstaged_rhel7_base_5
+install_puppet: True
+puppet_logdir: /var/log/puppet
+puppet_ssldir: /var/lib/puppet/ssl
+org: <organization>
+location: <location>
+manifest_file:
 
 ### Red Hat Subscription ###
 rhn_username: <user>
