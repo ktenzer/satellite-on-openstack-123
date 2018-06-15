@@ -39,10 +39,14 @@ Configure vars
 ```
 [root@sat6]# cd satellite-openstack-123
 ```
+
+```
 [root@sat6]# cp sample_vars.yml vars.yml
+```
 ```
 [root@sat6]# vi vars.yml
 ```
+
 ```
 ---
 ### General Settings ###
@@ -94,6 +98,7 @@ rhn_pool: <pool>
 Configure Inventory File
 ```
 [root@sat6]# cp sample.inventory inventory
+```
 ```
 [root@sat6]# vi inventory
 [server]
