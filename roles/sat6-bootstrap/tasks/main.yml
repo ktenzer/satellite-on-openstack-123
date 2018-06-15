@@ -74,9 +74,16 @@
 
 - name: Run puppet agent
   shell: puppet agent -tv
-  when: install_puppet == True
   register: puppet_run_output
+  when: install_puppet == True
+  ignore_errors: True
 
 - debug:
-    msg: "Puppet run will fail if the puppet cert is not signed or autosigned in Satellite. Go to Satellite under infrastructure->capsules->capsule->actions->certificates. You should see certificate pending, sign it and re-run playbook"
+    msg: "INFO: Puppet run will fail if the puppet cert is not signed or autosigned in Satellite. Go to Satellite under infrastructure->capsules->capsule->actions->certificates. You should see certificate pending, sign it and re-run playbook"
   when: puppet_run_output.rc != 0
+
+- name: upgrade all packages
+  yum:
+    name: '*'
+    state: latest
+  when: yum_update == True

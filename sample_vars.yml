@@ -3,6 +3,8 @@
 ssh_user: cloud-user
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
+yum_update: True
+debug: True
 
 ### OpenStack Settings ###
 stack_name: myinstance
@@ -21,7 +23,6 @@ internal_subnet: internal-subnet
 security_group: base
 flavor: m2.tiny
 image: rhel75
-ssh_key_name: admin
 volume_size: 30
 ssh_key_name: admin
 

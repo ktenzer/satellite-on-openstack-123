@@ -30,12 +30,3 @@
 
 - set_fact:
     stack_output: "{{ stack_output_raw.stdout|from_json }}"
-
-- name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
-  wait_for:
-    port: 22
-    host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
-    search_regex: OpenSSH
-    delay: 10
-  vars:
-    ansible_connection: local

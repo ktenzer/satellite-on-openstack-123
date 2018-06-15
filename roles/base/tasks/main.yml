@@ -1,10 +1,7 @@
-- name: Copy hosts file from template
-  template:
-    src: templates/hosts.j2
-    dest: /etc/hosts
-    owner: root
-    group: root
-    mode: 0644
+- name: Add Satellite server to hosts file
+  lineinfile:
+    path: /etc/hosts
+    line: '{{ satellite_ip }} {{ satellite_server }}'
 
 - name: check if host already registered
   command: subscription-manager list --available --match-installed --matches=*Openshift* --pool-only

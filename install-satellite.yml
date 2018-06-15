@@ -1,6 +1,6 @@
 ---
 - name: Perform base configuration of systems
-  hosts: all
+  hosts: server
   become: true
   gather_facts: true
 
@@ -37,6 +37,6 @@
 
   tasks:
   - import_role:
-      name: sat6-boostrap
+      name: sat6-bootstrap
     tags: ['boostrap']
 

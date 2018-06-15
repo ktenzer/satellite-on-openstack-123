@@ -11,7 +11,7 @@
 - set_fact:
     stack_output: "{{ stack_output_raw.stdout|from_json }}"
 
-- name: Add the bastion to the inventory
+- name: Add the instance to the inventory
   add_host:
     name: "{{ stack_output.name }}"
     groups: instance,all
@@ -19,3 +19,19 @@
     domain_name: "{{ domain_name }}"
     ansible_user: "{{ ssh_user }}"
     ansible_ssh_host: "{{ stack_output.address }}"
+
+- debug:
+    msg: "hostname {{ stack_output.name }} ip {{ stack_output.address }}"
+  when: debug == True
+
+- name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
+  wait_for:
+    port: 22
+    #host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    host: '{{ stack_output.address }}'
+    search_regex: OpenSSH
+    delay: 10
+
+- debug:
+    var: groups
+  when: debug == True
