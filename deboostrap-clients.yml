@@ -1,0 +1,11 @@
+---
+- name: Debootstrap Instance
+  hosts: all
+  become: true
+  gather_facts: true
+  remote_user: "{{ ssh_user }}"
+
+  tasks:
+  - import_role:
+      name: sat6-debootstrap
+    tags: ['deboostrap']
