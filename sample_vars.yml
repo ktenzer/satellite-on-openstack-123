@@ -13,6 +13,7 @@ openstack_version: 12
 openstack_user: admin
 openstack_passwd: <passwd>
 openstack_ip: <ip>
+openstack_project: admin
 
 ### OpenStack Instance Settings ###
 hostname: rhel123
