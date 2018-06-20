@@ -1,7 +1,7 @@
 ---
 - name: Deploy new client
   hosts: server
-  become: true
+  become: false
   gather_facts: true
 
   tasks:
