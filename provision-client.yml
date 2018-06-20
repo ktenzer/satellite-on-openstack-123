@@ -1,9 +1,9 @@
 ---
 - name: Deploy new client
-  hosts: server
-  become: true
-  gather_facts: true
-  remote_user: "{{ ssh_user }}"
+  hosts: localhost
+  connection: local
+  become: no
+  gather_facts: no
 
   tasks:
   - import_role:
