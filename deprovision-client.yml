@@ -1,7 +1,7 @@
 ---
 - name: Debootstrap Instance
   hosts: all
-  become: false
+  become: true
   gather_facts: true
   remote_user: "{{ ssh_user }}"
 
