@@ -1,3 +1,6 @@
+- name: Remove Host from Satellite
+  shell: hammer host delete --name {{ hostname_fqdn }}
+
 - name: Check if {{ stack_name }} stack exists
   command: "openstack stack show {{ stack_name }}"
   ignore_errors: yes
