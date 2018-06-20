@@ -17,7 +17,18 @@ def main():
     command = [
         'openstack', 'stack', 'delete',
         '--wait',
+        '-t', module.params.get('template')
     ]
+
+    parameters = module.params.get('parameters') or {}
+
+    for key, value in parameters.items():
+        command.append('--parameter')
+        if isinstance(value, list):
+            value = ",".join(value)
+        command.append("{}={}".format(key, value))
+
+    command.append(stack_name)
 
     process = subprocess.Popen(command,
                                stdout=subprocess.PIPE,
