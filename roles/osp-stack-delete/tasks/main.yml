@@ -1,0 +1,10 @@
+- name: Check if {{ stack_name }} stack exists
+  command: "openstack stack show {{ stack_name }}"
+  ignore_errors: yes
+  register: stack_check
+
+- name: Delete heat stack {{ stack_name }}
+  stack_delete:
+    name: "{{ stack_name }}"
+  register: stack_output
+  when: stack_check.rc == 0

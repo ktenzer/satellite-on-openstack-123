@@ -1,0 +1,10 @@
+- name: Subscribe client to Satellite Server
+  shell: subscription-manager unregister --force
+  register: unregister_output  
+  ignore_errors: True
+
+- name: Remove Satellite CA Certificate
+  shell: rpm -evh katello-ca-consumer-latest.noarch.rpm
+  when: unregister_output.rc != 0
+  ignore_errors: True
+

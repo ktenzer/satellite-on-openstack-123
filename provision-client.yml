@@ -1,9 +1,8 @@
 ---
 - name: Deploy new client
-  hosts: localhost
-  connection: local
-  become: no
-  gather_facts: no
+  hosts: server
+  become: true
+  gather_facts: true
 
   tasks:
   - import_role:
