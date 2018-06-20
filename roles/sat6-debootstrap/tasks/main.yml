@@ -8,3 +8,6 @@
   when: unregister_output.rc != 0
   ignore_errors: True
 
+- name: Remove Host from Satellite
+  shell: hammer host delete {{ hostname }}.{{ domain_name }}
+  when: unregister_output.rc != 0
