@@ -9,5 +9,5 @@
   ignore_errors: True
 
 - name: Remove Host from Satellite
-  shell: hammer host delete {{ hostname }}.{{ domain_name }}
+  shell: hammer host delete --name {{ hostname_fqdn }}
   when: unregister_output.rc != 0
