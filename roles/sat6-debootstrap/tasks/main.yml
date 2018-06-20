@@ -1,4 +1,4 @@
-- name: Subscribe client to Satellite Server
+- name: Unsubscribe client to Satellite Server
   shell: subscription-manager unregister
   register: unregister_output  
   ignore_errors: True
