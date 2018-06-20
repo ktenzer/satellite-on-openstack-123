@@ -1,17 +1,9 @@
 ---
 - name: Debootstrap Instance
-  hosts: instance
+  hosts: all
   become: false
   gather_facts: true
   remote_user: "{{ ssh_user }}"
-  environment:
-    OS_USERNAME: "{{ openstack_user }}"
-    OS_PASSWORD: "{{ openstack_passwd }}"
-    OS_AUTH_URL: http://{{ openstack_ip }}:5000/v3
-    OS_PROJECT_NAME: "{{ openstack_project }}"
-    OS_USER_DOMAIN_NAME: Default
-    OS_PROJECT_DOMAIN_NAME: Default
-    OS_IDENTITY_API_VERSION: 3
 
   tasks:
   - import_role:
@@ -23,6 +15,14 @@
   become: true
   gather_facts: no
   remote_user: "{{ ssh_user }}"
+  environment:
+    OS_USERNAME: "{{ openstack_user }}"
+    OS_PASSWORD: "{{ openstack_passwd }}"
+    OS_AUTH_URL: http://{{ openstack_ip }}:5000/v3
+    OS_PROJECT_NAME: "{{ openstack_project }}"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
 
   tasks:
   - import_role:
