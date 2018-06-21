@@ -7,7 +7,5 @@
   register: stack_check
 
 - name: Delete heat stack {{ stack_name }}
-  stack_delete:
-    name: "{{ stack_name }}"
-  register: stack_output
+  command: "openstack stack delete {{ stack_name }} --wait"
   when: stack_check.rc == 0
