@@ -1,6 +1,6 @@
 ---
 - name: Update Packages
-  hosts: clients
+  hosts: all
   become: true
   gather_facts: true
   remote_user: "{{ ssh_user }}"
