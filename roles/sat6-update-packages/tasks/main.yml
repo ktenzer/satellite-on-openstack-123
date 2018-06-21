@@ -1,6 +1,6 @@
 - name: Update Packages
   yum:
-    name: *
+    name: '*'
     state: latest
   when: (yum_update == True and yum_update_security_only == False)
 
