@@ -1,11 +1,14 @@
+- debug:
+    msg: "test123 {{ yum_update_security_only }}"
+
 - name: Update Packages
   yum:
     name: '*'
     state: latest
-  when: yum_update_security_only == False
+  when: yum_update_security_only == "False"
 
 - name: Update Security Packages
   yum:
     name: '*'
     state: latest
-  when: yum_update_security_only == True
+  when: yum_update_security_only == "True"
