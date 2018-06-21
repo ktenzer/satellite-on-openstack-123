@@ -1,0 +1,12 @@
+---
+- name: Update Packages
+  hosts: clients
+  become: true
+  gather_facts: true
+  remote_user: "{{ ssh_user }}"
+
+  tasks:
+  - import_role:
+      name: sat6-update-packages
+    tags: ['update']
+

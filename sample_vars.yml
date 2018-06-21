@@ -4,6 +4,7 @@ ssh_user: cloud-user
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
 yum_update: True
+yum_update_security_only: False
 debug: True
 
 ### OpenStack Settings ###

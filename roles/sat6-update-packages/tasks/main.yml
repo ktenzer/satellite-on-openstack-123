@@ -1,0 +1,11 @@
+- name: Update Packages
+  yum:
+    name: *
+    state: latest
+  when: (yum_update == True and yum_update_security_only == False)
+
+- name: Update Security Packages
+  yum:
+    name: *
+    state: latest
+  when: (yum_update == True and yum_update_security_only == True)
