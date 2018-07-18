@@ -9,27 +9,37 @@ debug: True
 
 ### OpenStack Settings ###
 stack_name: myinstance
-heat_template_path: /root/satellite-on-openstack-123/heat/instance.yaml
+heat_template_path: /root/satellite-on-openstack-123/heat/satellite.yaml
 openstack_version: 12
 openstack_user: admin
 openstack_passwd: <passwd>
 openstack_ip: <ip>
 openstack_project: admin
-
-### OpenStack Instance Settings ###
-hostname: rhel123
-domain_name: novalocal
 external_network: public
 internal_network: internal
 internal_subnet: internal-subnet
-security_group: base
-flavor: m2.tiny
-image: rhel75
-volume_size: 30
-ssh_key_name: admin
+service_subnet_cidr: 192.168.1.0/24
+router_id: <router id from 'openstack router list'>
 
+### OpenStack Satellite Settings ###
+master_hostname: sat6-master
+capsule_hostname_prefix: sat6-capsule
+satellite_domain_name: novalocal
+capsule_count: 0
+satellite_volume_size: 100
+satellite_ssh_key_name:
 
-### Satellite Settings ###
+### OpenStack Managed Instance Settings (Optional) ###
+### This is used for playbooks that deploy managed RHEL instance ###
+instance_hostname: rhel123
+instance_security_group: base
+instance_flavor: m2.tiny
+instance_image: rhel75
+instance_volume_size: 30
+instance_ssh_key_name: admin
+instance_domain_name: novalocal
+
+### Satellite Install Settings ###
 satellite_server: sat6.novalocal
 satellite_ip: <ip>
 satellite_version: 6.3
@@ -47,3 +57,12 @@ manifest_file:
 rhn_username: <user>
 rhn_password: <password>
 rhn_pool: <pool>
+
+### OpenStack Instance Group Policies ###
+### Set to 'affinity' if only one compute node ###
+capsule_server_group_policies: "['anti-affinity']"
+
+### OpenStack Instance Flavors ###
+master_flavor: sat6.master
+capsule_flavor: sat6.capsule
+instance_flavor: m1.small
