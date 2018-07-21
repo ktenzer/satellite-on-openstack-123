@@ -4,6 +4,14 @@
 - name: Set download policy
   command: hammer settings set --name default_download_policy --value on_demand
 
+- name: Copy manifest file to Satellite server
+  copy:
+    src: "{{ manifest_file }}"
+    dest: "{{ manifest_file }}"
+    owner: root
+    group: root
+    mode: 0644
+
 - name: Check if manifest file exists
   stat:
     path: "{{ manifest_file }}"
@@ -13,9 +21,10 @@
     that: stat_result.stat.exists == True
     msg: "Manifest file not found."
 
-- name: Check if manifest already exists
+- name: Check if manifest already is configured in Satellite server
   shell: hammer subscription list --organization {{ org }} |grep "[0-9]"
   register: manifest_output
+  ignore_errors: true
 
 - name: Upload Satellite Manifest
   command: hammer subscription upload --organization {{ org }} --file {{ manifest_file }}
@@ -92,18 +101,20 @@
   shell: hammer repository list --organization {{ org }} |grep "Red Hat Software Collections"
   register: software_collections_repo_output
   ignore_errors: True
+  when: software_collections_enabled == True
 
 - name: Enable Software Collections Repository
   shell: hammer repository-set enable --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server' --basearch='x86_64' --releasever='7Server' --name 'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server'
-  when: software_collections_repo_output.rc != 0
+  when: (software_collections_enabled == True and software_collections_repo_output.rc != 0)
 
 - name: Synchronize Satellite 6 Software Collections Repository
   shell: time hammer repository synchronize --organization {{ org }} --product 'Red Hat Software Collections for RHEL Server'  --name  'Red Hat Software Collections RPMs for Red Hat Enterprise Linux 7 Server x86_64 7Server'
   register: software_collections_output
-  when: software_collections_repo_output.rc != 0
+  when: (software_collections_enabled == True and software_collections_repo_output.rc != 0)
 
 - debug:
     msg: "{{ software_collections_output }}"
+  when: software_collections_enabled == True
 
 - name: Check for puppet forge product
   shell: hammer product list --organization {{ org }} | grep "Puppet Forge"
@@ -116,15 +127,33 @@
 
 - name: Create repository for puppet forge
   shell: hammer repository create  --organization {{ org }} --name='Modules' --product='Puppet Forge' --content-type='puppet' --publish-via-http=true --url=http://forge.puppetlabs.com/
-  when: puppet_output.rc != 0
+  when: (puppet_forge_enabled == True and puppet_output.rc != 0)
 
 - name: Synchronize puppet forge repository
   shell: time hammer repository synchronize --organization {{ org }} --product 'Puppet Forge'  --name  'Modules'
   register: puppet_forge_output
-  when: puppet_output.rc != 0
+  when: (puppet_forge_enabled == True and puppet_output.rc != 0)
 
 - debug:
     msg: "{{ puppet_forge_output }}"
+  when: puppet_forge_enabled == True
+
+- name: Check if Red Hat Insights repository exists
+  shell: hammer repository list |grep "Insights"
+  register: insights_output
+  ignore_errors: True
+
+- name: Add Red Hat Insights
+  shell: hammer repository create --name "Insights" --content-type "puppet" --product "Puppet Forge" --organization {{ org }}
+  when: insights_output.rc != 0
+
+- name: Download Red Hat Insights module
+  shell: curl -k -O https://forge.puppet.com/v3/files/lphiri-access_insights_client-0.0.9.tar.gz
+  when: insights_output.rc != 0
+
+- name: Upload Red Hat Insights module to Satellite
+  shell: hammer repository upload-content --path /home/cloud-user/lphiri-access_insights_client-0.0.9.tar.gz --name "Insights" --product "Puppet Forge" --organization {{ org }}
+  when: insights_output.rc != 0
 
 - name: Check if sync plan exists
   shell: hammer sync-plan list --organization {{ org }} |grep "daily sync"

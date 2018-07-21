@@ -8,25 +8,21 @@
     name: "{{ stack_name }}"
     template: "{{ heat_template_path }}"
     parameters:
-      hostname: "{{ hostname }}"
-      domain_name: "{{ domain_name }}"
-      internal_network: "{{ internal_network }}"
-      internal_subnet: "{{ internal_subnet }}"
+      master_hostname: "{{ master_hostname }}"
+      capsule_hostname_prefix: "{{ capsule_hostname_prefix }}"
+      satellite_domain_name: "{{ satellite_domain_name }}"
+      external_network: "{{ external_network }}"
+      service_network: "{{ service_network }}"
+      service_subnet: "{{ service_subnet }}"
       ssh_user: "{{ ssh_user }}"
-      ssh_key_name: "{{ ssh_key_name }}"
-      image: "{{ image }}"
-      volume_size: "{{ volume_size }}"
-      flavor: "{{ flavor }}"
-      security_group: "{{ security_group }}"
-
+      satellite_ssh_key_name: "{{ satellite_ssh_key_name }}"
+      master_image: "{{ master_image }}"
+      capsule_image: "{{ capsule_image }}"
+      master_volume_size: "{{ master_volume_size }}"
+      capsule_volume_size: "{{ capsule_volume_size }}"
+      master_flavor: "{{ master_flavor }}"
+      capsule_flavor: "{{ capsule_flavor }}"
+      capsule_count: "{{ capsule_count }}"
+      capsule_server_group_policies: "{{ capsule_server_group_policies }}"
   register: stack_output
   when: stack_check.rc != 0
-
-- name: Register stack output
-  command: >
-    openstack stack output show -f value -c output_value
-    {{ stack_name }} ip_address
-  register: stack_output_raw
-
-- set_fact:
-    stack_output: "{{ stack_output_raw.stdout|from_json }}"

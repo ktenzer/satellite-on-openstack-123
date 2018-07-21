@@ -1,0 +1,143 @@
+---
+heat_template_version: 2016-10-14
+
+description:
+  An instance for a DNS service made up of a single master and a set of
+  slave services.
+  The instances are created with Heat and then configured with Ansible
+
+parameters:
+  hostname:
+    description: >
+      The default prefix for Satellite master hostname
+    type: string
+    default: "sat6-master"
+
+  domain_name:
+    description: >
+      All VMs will be placed in this domain
+    type: string
+
+  # Networks to connect to or create
+  external_network:
+    type: string
+    description: >
+      The external network that provides floating IP addresses for the nodes
+    constraints:
+    - custom_constraint: neutron.network
+
+  service_network:
+    description: >
+      The name or ID of the internal network
+    type: string
+    constraints:
+    - custom_constraint: neutron.network
+
+  service_subnet:
+    description: >
+      The name or ID of the internal IPv4 space
+    type: string
+    constraints:
+    - custom_constraint: neutron.subnet
+
+  image:
+    description: >
+      The Glance image to use as a base for Satellite Server
+    type: string
+    constraints:
+    - custom_constraint: glance.image
+
+  flavor:
+    description: >
+      The name of the OpenStack instance flavor to use for Satellite master
+    type: string
+    default: m1.medium
+    constraints:
+
+  # Access to the VMs
+  ssh_user:
+    type: string
+    description: >
+      The SSH user available on all nodes.
+    default: cloud-user
+
+  ssh_key_name:
+    type: string
+    description: Name of the SSH keypair registered with Nova
+    constraints:
+    - custom_constraint: nova.keypair
+
+  volume_size:
+    type: string
+    description: Size of the root volume
+    default: 50
+
+resources:
+
+  master:
+    type: master.yaml
+    properties:
+      image: {get_param: image}
+      flavor: {get_param: flavor}
+      external_network: {get_param: external_network}
+      service_network: {get_param: service_network}
+      service_subnet: {get_param: service_subnet}
+      security_group: {get_resource: master_security_group}
+      hostname: {get_param: hostname}
+      domain_name: {get_param: domain_name}
+      ssh_user: {get_param: ssh_user}
+      ssh_key_name: {get_param: ssh_key_name}
+      volume_size: {get_param: volume_size}
+
+  master_security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      rules:
+      - protocol: icmp
+      - protocol: tcp
+        port_range_min: 22
+        port_range_max: 22
+      - protocol: tcp
+        port_range_min: 80
+        port_range_max: 80
+      - protocol: tcp
+        port_range_min: 443
+        port_range_max: 443
+      - protocol: tcp
+        port_range_min: 8443
+        port_range_max: 8443
+      - protocol: tcp
+        port_range_min: 5646
+        port_range_max: 5646
+      - protocol: tcp
+        port_range_min: 5647
+        port_range_max: 5647
+      - protocol: tcp
+        port_range_min: 8000
+        port_range_max: 8000
+      - protocol: tcp
+        port_range_min: 8140
+        port_range_max: 8140
+      - protocol: tcp
+        port_range_min: 9090
+        port_range_max: 9090
+      - protocol: tcp
+        port_range_min: 5000
+        port_range_max: 5000
+      - protocol: tcp
+        port_range_min: 53
+        port_range_max: 53
+      - protocol: udp
+        port_range_min: 53
+        port_range_max: 53
+      - protocol: udp
+        port_range_min: 67
+        port_range_max: 67
+      - protocol: udp
+        port_range_min: 69
+        port_range_max: 69
+
+outputs:
+  master_ip_address:
+    value: {get_attr: [master, ip_address]}
+

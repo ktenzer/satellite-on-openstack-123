@@ -28,23 +28,27 @@ I have also created a blog that goes into a bit more detail for those interested
 
 # Install Satellite
 ![](images/one.png)
-Launch RHEL 7.5 Instance via OpenStack (configure with Floating IP)
-
-Connect to instance and clone github repo
+Clone github repo
 ```
 # git clone https://github.com/ktenzer/satellite-on-openstack-123.git
 ```
 
-Configure vars
+Change directory to repo
 ```
-[root@sat6]# cd satellite-openstack-123
+# cd satellite-on-openstack-123
 ```
 
+Checkout a release branch
 ```
-[root@sat6]# cp sample_vars.yml vars.yml
+[root@localhost]# git checkout release-6.3
+```
+
+Configure vars
+```
+[root@localhost]# cp sample_vars.yml vars.yml
 ```
 ```
-[root@sat6]# vi vars.yml
+[root@localhost]# vi vars.yml
 ```
 
 ```
@@ -95,34 +99,15 @@ rhn_password: <password>
 rhn_pool: <pool>
 ```
 
-Configure Inventory File
+Run Satellite Deployment Playbook
 ```
-[root@sat6]# cp sample.inventory inventory
-```
-```
-[root@sat6]# vi inventory
-[server]
-sat6.novalocal
-
-[capsules]
-
-[clients]
-rhel2.novalocal
-rhel1.novalocal
-```
-
-Run Satellite Install Playbook
-```
-[root@sat6]# ansible-playbook install-satellite.yml \
+[root@sat6]# ansible-playbook deploy-satellite.yml \
 --private-key=/root/admin.pem -e @.vars.yml -i inventory
 
 PLAY RECAP *****************************************************************************************
-rhel1.novalocal : ok=10 changed=4 unreachable=0 failed=0
-rhel2.novalocal : ok=10 changed=4 unreachable=0 failed=0
-sat6.novalocal : ok=46 changed=18 unreachable=0 failed=0
+localhost                  : ok=10   changed=5    unreachable=0    failed=0
+sat6-master                : ok=45   changed=19   unreachable=0    failed=0
 ```
-
-Some things are still not automated. You need to create hostgroup and also configure activation key but that should be it. This is outlined in more detail on my blog.
 
 # Bootstrap Existing Instances
 ![](images/two.png)
@@ -138,6 +123,25 @@ The Satellite bootstrap steps are as follows:
 * Install Puppet
 * Configure Puppet
 
+Configure Inventory File
+```
+[root@localhost]# cp sample.inventory inventory
+```
+
+```
+[root@localhost]# vi inventory
+[server]
+sat6.novalocal
+
+[capsules]
+
+[clients]
+rhel2.novalocal
+rhel1.novalocal
+``` 
+
+Run Bootstrap Playbook
+
 ```
 [root@sat6]# ansible-playbook bootstrap-clients.yml --private-key=/root/admin.pem -e @../vars.yml -i ../inventory
 
@@ -151,19 +155,13 @@ rhel123.novalocal : ok=8 changed=2 unreachable=0 failed=0
 
 Configure OpenStack Client
 
-As mentioned in order to communicate with OpenStack we need to authenticate to Keystone, the identity service. The playbook is setup-openstack-client.yml. In order to run it no inventory is needed since it will just configure the client on the localhost or host running playbook.
+As mentioned in order to communicate with OpenStack we need a client. The playbook is setup-openstack-client.yml. In order to run it no inventory is needed since it will just configure the client on the localhost or host running playbook.
 
 ```
 [root@sat6]# ansible-playbook setup-openstack-client.yml --private-key=/root/admin.pem -e @../vars.yml
 
 PLAY RECAP *****************************************************************************************
 localhost : ok=4 changed=1 unreachable=0 failed=0
-```
-
-Once OpenStack client is setup we need to authenticate. This is done outside of the Ansible environment.
-
-``` 
-[root@sat6]# source /root/keystonerc_admin
 ```
 
 Authentication credentials are set in the environment. We are using OpenStack CLI through Ansible. Another option is to use OpenStack modules written for Ansible and then authentication is of course built-in. This is a much cleaner approach but also requires various python libraries and versions like shade.

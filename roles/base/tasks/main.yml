@@ -1,10 +1,13 @@
-- name: Add Satellite server to hosts file
-  lineinfile:
-    path: /etc/hosts
-    line: '{{ satellite_ip }} {{ satellite_server }}'
+- name: Copy hosts file from template
+  template:
+    src: templates/hosts.j2
+    dest: /etc/hosts
+    owner: root
+    group: root
+    mode: 0644
 
 - name: check if host already registered
-  command: subscription-manager list --available --match-installed --matches=*Openshift* --pool-only
+  command: subscription-manager list --available --match-installed --matches=*Satellite* --pool-only
   register: subs_result
   failed_when: false
   changed_when: "'This system is not yet registered' in subs_result.stderr"
@@ -48,16 +51,10 @@
     name: '*'
     state: latest
 
-- name: Ensure that required packages are present on target hosts
+- name: Ensure that required packages are installed on target hosts
   yum:
     name: "{{item}}"
     state: latest
   retries: 5
   delay: 5
-  with_items: "{{packages}}"
-
-- name: Install Required Packages
-  yum:
-    name: "{{item}}"
-    state: installed
   with_items: "{{packages}}"

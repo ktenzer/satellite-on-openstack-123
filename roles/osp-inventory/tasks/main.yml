@@ -4,31 +4,45 @@
 
 - name: Register stack output
   command: >
-    openstack stack output show -f value -c output_value
+    openstack stack output show -f json -c output_value
     {{ stack_name }} ip_address
   register: stack_output_raw
 
 - set_fact:
-    stack_output: "{{ stack_output_raw.stdout|from_json }}"
+    stack_output: "{{ (stack_output_raw.stdout|from_json).output_value }}"
 
-- name: Add the instance to the inventory
+- name: Debug
+  debug:
+      msg: "{{ stack_output }}"
+  when: debug == True
+
+- name: Add the satellite master to the inventory
   add_host:
-    name: "{{ stack_output.name }}"
-    groups: instance,all
-    zone: "{{ domain_name }}"
-    domain_name: "{{ domain_name }}"
+    name: "{{ stack_output.master.name }}"
+    groups: master,all,satellite
+    domain_name: "{{ satellite_domain_name }}"
     ansible_user: "{{ ssh_user }}"
-    ansible_ssh_host: "{{ stack_output.address }}"
+    ansible_ssh_host: "{{ stack_output.master.address }}"
+
+- name: Add the capsules to the inventory
+  add_host:
+    name: "{{ item.name | default([]),true }}"
+    groups: capsules,all,satellite
+    domain_name: "{{ satellite_domain_name }}"
+    ansible_user: "{{ ssh_user }}"
+    ansible_ssh_host: "{{ item.address | default([]),true  }}"
+  when: capsule_count != "0"
+  with_items: stack_output.capsules | default([]),true
 
 - debug:
-    msg: "hostname {{ stack_output.name }} ip {{ stack_output.address }}"
+    msg: "Satelite server hostname {{ stack_output.master.name }} ip {{ stack_output.master.address }}"
   when: debug == True
 
 - name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
   wait_for:
     port: 22
     #host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
-    host: '{{ stack_output.address }}'
+    host: '{{ (stack_output.master.address|default(ansible_host))|default(inventory_hostname) }}'
     search_regex: OpenSSH
     delay: 10
 

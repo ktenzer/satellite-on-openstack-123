@@ -4,7 +4,7 @@
   register: hammer_output
 
 - debug:
-    msg: "{{ hammer_output }}"
+    msg: "Hammer expected to throw error when Satellite not installed! {{ hammer_output }}"
 
 - name: Run Satellite 6 Installer
   command: satellite-installer --scenario satellite --foreman-initial-organization {{ org }} --foreman-initial-location {{ location }} --foreman-admin-username {{admin_user }} --foreman-admin-password {{ admin_passwd }} --foreman-proxy-dns-managed=false --foreman-proxy-dhcp-managed=false

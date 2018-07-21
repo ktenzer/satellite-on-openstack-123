@@ -19,22 +19,6 @@
   command: hammer content-view add-repository --organization {{ org }} --name 'RHEL7_Base' --product 'Red Hat Enterprise Linux Server' --repository 'Red Hat Satellite Tools 6.3 - Puppet 4 for RHEL 7 Server RPMs x86_64'
   when: base_cv_output.rc != 0
 
-- name: Add stdlib module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name stdlib
-  when: base_cv_output.rc != 0
-
-- name: Add concat puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name concat
-  when: base_cv_output.rc != 0
-
-- name: Add ntp puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author puppetlabs --name ntp
-  when: base_cv_output.rc != 0
-
-- name: add ssh puppet module to base content view
-  command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author saz --name ssh
-  when: base_cv_output.rc != 0
-
 - name: add insights puppet module to base content view
   command: hammer content-view puppet-module add --organization {{ org }} --content-view RHEL7_Base --author lphiri --name access_insights_client
   when: base_cv_output.rc != 0
@@ -48,10 +32,49 @@
   when: base_cv_output.rc != 0
 
 - name: Check if activation key exists
-  shell: hammer activation-key list --organization="{{ org }}" |grep "rhel7-base"
+  shell: hammer activation-key list --organization="{{ org }}" |grep "{{ activation_key }}"
   register: activation_key_output
   ignore_errors: True
   
 - name: Create activation key
-  shell: hammer activation-key create --organization="{{ org }}" --name="rhel7-base" --unlimited-hosts --lifecycle-environment='UnStaged' --content-view='RHEL7_Base'
+  shell: hammer activation-key create --organization="{{ org }}" --name="{{ activation_key }}" --unlimited-hosts --lifecycle-environment='UnStaged' --content-view='RHEL7_Base'
   when: activation_key_output.rc != 0
+
+- name: Get subscritpion
+  shell: hammer subscription list --organization "RedHat" |grep "{{ subscription_name }}" |awk '{print $1'}
+  register: subscription_output
+  when: activation_key_output.rc != 0
+
+- debug:
+    msg: "Subscription ID {{ subscription_output.stdout }}"
+  when: activation_key_output.rc != 0
+
+- name: Add subscritpion to activation key
+  shell: hammer activation-key add-subscription --organization="{{ org }}" --name='{{ activation_key }}' --subscription-id="{{ subscription_output.stdout }}"
+  when: activation_key_output.rc != 0
+
+- name: Check Host Group Exists
+  shell: hammer hostgroup list |grep "{{ hostgroup }}"
+  register: hostgroup_output
+  ignore_errors: true
+
+- name: Get puppet environment
+  shell: hammer environment list |grep unstaged |awk '{ print $3'}
+  register: env_output
+  when: hostgroup_output.rc != 0
+
+- debug:
+    msg: "{{ env_output.stdout }}"
+  when: hostgroup_output.rc != 0
+
+- name: Create Host Group
+  shell:   hammer hostgroup create --query-organization="{{ org }}" --organizations="{{ org }}" --locations="{{ location }}" --architecture='x86_64' --content-source-id=1 --puppet-ca-proxy-id=1 --puppet-proxy-id=1 --lifecycle-environment='UnStaged' --puppet-classes='access_insights_client'  --content-view='RHEL7_Base' --environment="{{ env_output.stdout }}" --name='{{ hostgroup }}'
+  when: hostgroup_output.rc != 0
+
+- name: Add activation keys to host group
+  shell: hammer hostgroup set-parameter --hostgroup='{{ hostgroup }}' --name='kt_activation_keys' --value='{{ activation_key }}'
+  when: hostgroup_output.rc != 0
+
+- name: Enable Puppet 4 for Host Group
+  shell: hammer hostgroup set-parameter --hostgroup='{{ hostgroup }}' --name='enable-puppet4' --value='true'
+  when: hostgroup_output.rc != 0
