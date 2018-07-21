@@ -43,6 +43,17 @@ Checkout a release branch
 [root@localhost]# git checkout release-6.3
 ```
 
+Configure OpenStack Client
+
+As mentioned in order to communicate with OpenStack we need a client. The playbook is setup-openstack-client.yml. In order to run it no inventory is needed since it will just configure the client on the localhost or host running playbook.
+
+```
+[root@localhost]# ansible-playbook setup-openstack-client.yml --private-key=/root/admin.pem -e @../vars.yml
+
+PLAY RECAP *****************************************************************************************
+localhost : ok=4 changed=1 unreachable=0 failed=0
+```
+
 Configure vars
 ```
 [root@localhost]# cp sample_vars.yml vars.yml
@@ -57,33 +68,49 @@ Configure vars
 ssh_user: cloud-user
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
+yum_update: True
+yum_update_security_only: False
+debug: True
 
 ### OpenStack Settings ###
 stack_name: myinstance
-heat_template_path: /root/satellite-on-openstack-123/heat/instance.yaml
+heat_template_path: /root/satellite-on-openstack-123/heat/satellite_integrated_capsule_only.yaml
 openstack_version: 12
 openstack_user: admin
 openstack_passwd: <passwd>
 openstack_ip: <ip>
-
-### OpenStack Instance Settings ###
-hostname: rhel123
-domain_name: novalocal
+openstack_project: admin
 external_network: public
-internal_network: internal
-internal_subnet: internal-subnet
-security_group: base
-flavor: m2.tiny
-image: rhel75
-ssh_key_name: admin
-volume_size: 30
-ssh_key_name: admin
+service_network: internal
+service_subnet: internal-subnet
 
-### Satellite Settings ###
+### OpenStack Satellite Settings ###
+### Capsule settings only important with satellite.yaml ###
+master_hostname: sat6-master
+capsule_hostname_prefix: sat6-capsule
+satellite_domain_name: novalocal
+capsule_count: 1
+master_volume_size: 100
+capsule_volume_size: 50
+satellite_ssh_key_name: admin
+
+### OpenStack Managed Instance Settings (Optional) ###
+### This is used for playbooks that deploy managed RHEL instance ###
+instance_hostname: rhel123
+instance_security_group: base
+instance_flavor: m2.tiny
+instance_image: rhel75
+instance_volume_size: 30
+instance_ssh_key_name: admin
+instance_domain_name: novalocal
+
+### Satellite Install Settings ###
 satellite_server: sat6.novalocal
-satellite_ip: <ip>
 satellite_version: 6.3
+hostgroup: RHEL7_Base
 activation_key: rhel7-base
+software_collections_enabled: False
+puppet_forge_enabled = False
 puppet_version: puppet4
 puppet_environment: KT_RedHat_unstaged_rhel7_base_5
 install_puppet: True
@@ -97,6 +124,15 @@ manifest_file:
 rhn_username: <user>
 rhn_password: <password>
 rhn_pool: <pool>
+
+### OpenStack Instance Group Policies ###
+### Set to 'affinity' if only one compute node ###
+capsule_server_group_policies: "['anti-affinity']"
+
+### OpenStack Instance Flavors ###
+master_flavor: sat6.master
+capsule_flavor: sat6.capsule
+instance_flavor: m1.small
 ```
 
 Run Satellite Deployment Playbook
@@ -143,7 +179,7 @@ rhel1.novalocal
 Run Bootstrap Playbook
 
 ```
-[root@sat6]# ansible-playbook bootstrap-clients.yml --private-key=/root/admin.pem -e @../vars.yml -i ../inventory
+[root@localhost]# ansible-playbook bootstrap-clients.yml --private-key=/root/admin.pem -e @../vars.yml -i ../inventory
 
 PLAY RECAP *****************************************************************************************
 rhel1.novalocal : ok=8 changed=2 unreachable=0 failed=0
@@ -153,29 +189,18 @@ rhel123.novalocal : ok=8 changed=2 unreachable=0 failed=0
 # Deploy New Instance via Heat and Bootstrap
 ![](images/three.png)
 
-Configure OpenStack Client
-
-As mentioned in order to communicate with OpenStack we need a client. The playbook is setup-openstack-client.yml. In order to run it no inventory is needed since it will just configure the client on the localhost or host running playbook.
-
-```
-[root@sat6]# ansible-playbook setup-openstack-client.yml --private-key=/root/admin.pem -e @../vars.yml
-
-PLAY RECAP *****************************************************************************************
-localhost : ok=4 changed=1 unreachable=0 failed=0
-```
-
 Authentication credentials are set in the environment. We are using OpenStack CLI through Ansible. Another option is to use OpenStack modules written for Ansible and then authentication is of course built-in. This is a much cleaner approach but also requires various python libraries and versions like shade.
 
 Make sure strict ssh host key checking is off (StrictHostKeyChecking) in /etc/sshd/ssh_config or set option on cli for Ansible. If strict host key checking is on you are of course prompted when connecting to host via ssh for first time and automation requires no manual inputs.
 
 ```
-[root@sat6(keystone_admin)]# export ANSIBLE_HOST_KEY_CHECKING=False
+[root@localhost(keystone_admin)]# export ANSIBLE_HOST_KEY_CHECKING=False
 ```
 
 Once authenticated run the provision-client.yml playbook. This will take a few minutes, as a new instance in OpenStack will be provisioned.
 
 ``` 
-[root@sat6(keystone_admin)]# ansible-playbook provision-client.yml \
+[root@localhost]# ansible-playbook provision-client.yml \
 --private-key=/root/admin.pem -e @../vars.yml
 PLAY RECAP *****************************************************************************************
 localhost : ok=11 changed=6 unreachable=0 failed=0
