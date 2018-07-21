@@ -14,6 +14,7 @@ We are happy to track and discuss ideas, topics and requests via 'Issues'.
 * An openstack ssh key for accessing instances.
 * A pre-configured provider (public) network with at least three available floating ips.
 * Additional Flavors configured
+  * sat6.master (2 vCPU, 12GB RAM, 110GB Disk)
   * m2.tiny  (1 vCPU, 1GB RAM, 30 GB Root Disk)
 * A router that has the provider network configured as a gateway (floating ip network).
 * A internal non-routable network and subnet for instances.
