@@ -46,6 +46,6 @@
 
   tasks:
   - import_role:
-      name: osp-instance-delete
+      name: osp-delete-instance
     tags: ['undeploy']
 
