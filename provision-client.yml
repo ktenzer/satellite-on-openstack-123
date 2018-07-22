@@ -1,8 +1,8 @@
 ---
 - name: Deploy new client
-  hosts: server
-  become: true
-  gather_facts: true
+  hosts: localhost
+  become: false
+  gather_facts: false
   remote_user: "{{ ssh_user }}"
   environment:
     OS_USERNAME: "{{ openstack_user }}"
@@ -15,9 +15,7 @@
 
   tasks:
   - import_role:
-      name: osp-stack-create
-  - import_role:
-      name: osp-inventory
+      name: osp-create-instance
     tags: ['deploy']
 
 - name: Bootstrap Instance
