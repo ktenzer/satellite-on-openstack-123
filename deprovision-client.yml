@@ -1,6 +1,26 @@
 ---
+- name: Deploy Satellite Infrastructure
+  hosts: localhost
+  connection: local
+  become: no
+  gather_facts: no
+  environment:
+    OS_USERNAME: "{{ openstack_user }}"
+    OS_PASSWORD: "{{ openstack_passwd }}"
+    OS_AUTH_URL: http://{{ openstack_ip }}:5000/v3
+    OS_PROJECT_NAME: "{{ openstack_project }}"
+    OS_USER_DOMAIN_NAME: Default
+    OS_PROJECT_DOMAIN_NAME: Default
+    OS_IDENTITY_API_VERSION: 3
+
+  tasks:
+  - import_role:
+      name: osp-inventory-instance
+  - import_role:
+      name: osp-inventory
+
 - name: Debootstrap Instance
-  hosts: all
+  hosts: instance
   become: true
   gather_facts: true
   remote_user: "{{ ssh_user }}"
@@ -11,7 +31,7 @@
     tags: ['deboostrap']
 
 - name: Remove instance
-  hosts: server
+  hosts: master
   become: true
   gather_facts: no
   remote_user: "{{ ssh_user }}"
@@ -26,6 +46,6 @@
 
   tasks:
   - import_role:
-      name: osp-stack-delete
+      name: osp-instance-delete
     tags: ['undeploy']
 

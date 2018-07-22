@@ -28,8 +28,8 @@
     report = true
     ignoreschedules = true
     daemon = false
-    ca_server = {{ satellite_server }}
-    server = {{ satellite_server }}
+    ca_server = {{ master_hostname  }}.{{ satellite_domain_name }}
+    server = {{ master_hostname  }}.{{ satellite_domain_name }}
     environment = {{ puppet_environment }}
 
     # Where puppetd caches the local configuration.  An

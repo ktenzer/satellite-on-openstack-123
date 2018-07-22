@@ -1,0 +1,19 @@
+- name: Check if instance exists
+  shell:  openstack server show {{ instance_name }}
+  register: instance_output
+  ignore_errors: true
+
+- name: Get instance IP
+  shell: openstack server show {{ instance_name }} |grep addresses |awk '{print $4'} |sed 's/{{ instance_network }}=//' |sed 's/,//'
+  register: ip_output
+
+- debug:
+    msg: "Instance ip {{ ip_output.stdout }}"
+  when: debug == True
+
+- name: Add the instance to the inventory
+  add_host:
+    name: "{{ instance_name }}"
+    groups: all,instance
+    ansible_user: "{{ ssh_user }}"
+    ansible_ssh_host: "{{ ip_output.stdout }}"

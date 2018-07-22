@@ -1,7 +1,7 @@
 - name: Add Satellite server to hosts file
   lineinfile:
     path: /etc/hosts
-    line: '{{ satellite_ip }} {{ satellite_server }}'
+    line: '{{ satellite_ip }} {{ master_hostname  }}.{{ satellite_domain_name }} {{ master_hostname }}'
 
 - name: Check if katello rpm ca exists
   shell: rpm -qa |grep katello-ca-consumer
@@ -9,7 +9,7 @@
   ignore_errors: True
 
 - name: Install Katello CA
-  command: rpm -Uvh http://{{ satellite_server }}/pub/katello-ca-consumer-latest.noarch.rpm
+  command: rpm -Uvh http://{{ satellite_ip }}/pub/katello-ca-consumer-latest.noarch.rpm
   when: rpm_output.rc != 0
 
 - name: Subscribe client to Satellite Server
