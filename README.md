@@ -67,6 +67,7 @@ Configure vars
 ---
 ### General Settings ###
 ssh_user: cloud-user
+ssh_key_path: /root/admin.pem
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
 yum_update: True
@@ -137,8 +138,9 @@ instance_flavor: m1.small
 ```
 
 Run Satellite Deployment Playbook
+
 ```
-[root@sat6]# ansible-playbook deploy-satellite.yml \
+[root@localhost]# ansible-playbook deploy-satellite.yml \
 --private-key=/root/admin.pem -e @.vars.yml -i inventory
 
 PLAY RECAP *****************************************************************************************
@@ -187,27 +189,44 @@ rhel1.novalocal : ok=8 changed=2 unreachable=0 failed=0
 rhel123.novalocal : ok=8 changed=2 unreachable=0 failed=0
 ```
 
-# Deploy New Instance via Heat and Bootstrap
+# Deploy New Instance via OpenStack and Bootstrap
 ![](images/three.png)
 
 Authentication credentials are set in the environment. We are using OpenStack CLI through Ansible. Another option is to use OpenStack modules written for Ansible and then authentication is of course built-in. This is a much cleaner approach but also requires various python libraries and versions like shade.
 
 Make sure strict ssh host key checking is off (StrictHostKeyChecking) in /etc/sshd/ssh_config or set option on cli for Ansible. If strict host key checking is on you are of course prompted when connecting to host via ssh for first time and automation requires no manual inputs.
 
+SSH to Satellite Master
+
 ```
-[root@localhost(keystone_admin)]# export ANSIBLE_HOST_KEY_CHECKING=False
+[root@localhost(keystone_admin)]# ssh -i /root/admin.pem cloud-user@sat6-master
 ```
 
-Once authenticated run the provision-client.yml playbook. This will take a few minutes, as a new instance in OpenStack will be provisioned.
+Change directory
+
+```
+[cloud-user@sat6-master]$ cd satellite-on-openstack-123
+```
+
+Disable host key checking for ansible
+ 
+```
+[cloud-user@sat6-master]$ export ANSIBLE_HOST_KEY_CHECKING=False
+```
+
+Setup OpenStack Client
+
+```
+[cloud-user@sat6-master]$ ansible-playbook setup-openstack-client.yml --private-key=/home/cloud-user/admin.pem -e @vars.yml
+```
+
+Run the provision-client.yml playbook. This will take a few minutes, as a new instance in OpenStack will be provisioned.
 
 ``` 
-[root@localhost]# ansible-playbook provision-client.yml \
---private-key=/root/admin.pem -e @../vars.yml
+[cloud-user@sat6-master]$ ansible-playbook provision-client.yml --private-key=/home/cloud-user/admin.pem -e @vars.yml
 PLAY RECAP *****************************************************************************************
 localhost : ok=11 changed=6 unreachable=0 failed=0
 rhel3 : ok=15 changed=12 unreachable=0 failed=0
 ```
 
 If you are configuring puppet, a certificate needs to be signed in Satellite. You can of course setup auto-signed certificates but default is you need to sign. This means pupet agent run will fail. You need to go into Satellite, under Capsule and Certificates. There you can click sign to sign a certificate.
-
-

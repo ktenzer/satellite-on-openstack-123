@@ -1,6 +1,7 @@
 ---
 ### General Settings ###
 ssh_user: cloud-user
+ssh_key_path: /root/admin.pem
 admin_user: <Satellite admin user>
 admin_passwd: <Satellite admin password>
 yum_update: True
@@ -31,6 +32,7 @@ satellite_ssh_key_name: admin
 
 ### OpenStack Managed Instance Settings (Optional) ###
 ### This is used for playbooks that deploy managed RHEL instance ###
+satellite_ip: <ip>
 instance_name: rhel123
 instance_security_group: base
 instance_flavor: m2.tiny
@@ -40,7 +42,6 @@ instance_domain_name: novalocal
 instance_network: internal
 
 ### Satellite Install Settings ###
-satellite_server: sat6.novalocal
 satellite_version: 6.3
 hostgroup: RHEL7_Base
 activation_key: rhel7-base
