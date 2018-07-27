@@ -141,7 +141,7 @@ Run Satellite Deployment Playbook
 
 ```
 [root@localhost]# ansible-playbook deploy-satellite.yml \
---private-key=/root/admin.pem -e @.vars.yml -i inventory
+--private-key=/root/admin.pem -e @vars.yml -i inventory
 
 PLAY RECAP *****************************************************************************************
 localhost                  : ok=10   changed=5    unreachable=0    failed=0
