@@ -26,6 +26,8 @@ master_hostname: sat6-master
 capsule_hostname_prefix: sat6-capsule
 satellite_domain_name: novalocal
 capsule_count: 1
+master_image: rhel75
+capsule_image: rhel75
 master_volume_size: 100
 capsule_volume_size: 50
 satellite_ssh_key_name: admin
@@ -46,7 +48,7 @@ satellite_version: 6.3
 hostgroup: RHEL7_Base
 activation_key: rhel7-base
 software_collections_enabled: False
-puppet_forge_enabled = False
+puppet_forge_enabled: False
 puppet_version: puppet4
 puppet_environment: KT_RedHat_unstaged_rhel7_base_5
 install_puppet: True
