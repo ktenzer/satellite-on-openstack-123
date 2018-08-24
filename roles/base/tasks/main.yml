@@ -12,13 +12,19 @@
   failed_when: false
   changed_when: "'This system is not yet registered' in subs_result.stderr"
 
-- name: Register hosts
+- name: Register hosts using username
   command: subscription-manager register --username={{ rhn_username }} --password={{ rhn_password }}
   retries: 5
   delay: 5
-  when: subs_result.changed
+  when: (subscription_use_username == "True" and subs_result.changed)
 
-- name: Check Red Hat subscription
+- name: Register hosts using activation key
+  command: subscription-manager register --org={{ sub_mgr_org_id }} --activationkey={{ sub_mgr_activation_key }}
+  retries: 5
+  delay: 5
+  when: subscription_use_username == False and subs_result.changed
+
+- name: Check Red Hat subscription using username
   redhat_subscription:
     state: present
     username: "{{ rhn_username }}"
@@ -28,6 +34,19 @@
   register: subscribe
   retries: 5
   delay: 5
+  when: subscription_use_username == "True"
+
+- name: Check Red Hat subscription using activation key
+  redhat_subscription:
+    state: present
+    activationkey: "{{ sub_mgr_activation_key }}"
+    org_id: "{{ sub_mgr_org_id }}"
+    pool: "{{ rhn_pool }}"
+    #force_register: yes
+  register: subscribe
+  retries: 5
+  delay: 5
+  when: subscription_use_username == False
 
 - debug:
     msg: "{{subscribe}}"

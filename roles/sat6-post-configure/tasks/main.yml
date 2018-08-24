@@ -41,7 +41,7 @@
   when: activation_key_output.rc != 0
 
 - name: Get subscritpion
-  shell: hammer subscription list --organization "RedHat" |grep "{{ subscription_name }}" |awk '{print $1'}
+  shell: hammer subscription list --organization {{ org }} |grep "{{ subscription_name }}" |awk '{print $1'}
   register: subscription_output
   when: activation_key_output.rc != 0
 

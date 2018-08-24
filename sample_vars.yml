@@ -32,17 +32,6 @@ master_volume_size: 100
 capsule_volume_size: 50
 satellite_ssh_key_name: admin
 
-### OpenStack Managed Instance Settings (Optional) ###
-### This is used for playbooks that deploy managed RHEL instance ###
-satellite_ip: <ip>
-instance_name: rhel123
-instance_security_group: base
-instance_flavor: m2.tiny
-instance_image: rhel75
-instance_ssh_key_name: admin
-instance_domain_name: novalocal
-instance_network: internal
-
 ### Satellite Install Settings ###
 satellite_version: 6.3
 hostgroup: RHEL7_Base
@@ -59,9 +48,13 @@ location: <location>
 manifest_file:
 
 ### Red Hat Subscription ###
+subscription_use_username: False
 rhn_username: <user>
 rhn_password: <password>
 rhn_pool: <pool>
+# sub_mgr_activation_key:
+# sub_mgr_org_id:
+
 
 ### OpenStack Instance Group Policies ###
 ### Set to 'affinity' if only one compute node ###
