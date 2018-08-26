@@ -49,11 +49,9 @@ manifest_file:
 
 ### Red Hat Subscription ###
 subscription_use_username: False
-rhn_username: <user>
-rhn_password: <password>
+rhn_username_or_ord_id: <user or org id>
+rhn_password_or_activation_key: <password or activation key>
 rhn_pool: <pool>
-# sub_mgr_activation_key:
-# sub_mgr_org_id:
 
 
 ### OpenStack Instance Group Policies ###
